@@ -11,9 +11,7 @@ final public class MessagePackDecoder {
      by providing contextual information.
      */
     public var userInfo: [CodingUserInfoKey : Any] = [:]
-    
-    var rawData: String?
-    
+
     /**
      Returns a value of the type you specify,
      decoded from a MessagePack object.
@@ -29,9 +27,7 @@ final public class MessagePackDecoder {
         let decoder = _MessagePackDecoder(data: data)
         decoder.userInfo = self.userInfo
         decoder.userInfo[MessagePackDecoder.nonMatchingFloatDecodingStrategyKey] = nonMatchingFloatDecodingStrategy
-        
-        rawData = String(data: data, encoding: .ascii)
-        
+
         switch type {
         case is Data.Type:
             let box = try Box<Data>(from: decoder)
@@ -64,10 +60,6 @@ final public class MessagePackDecoder {
     internal static var nonMatchingFloatDecodingStrategyKey: CodingUserInfoKey {
         return CodingUserInfoKey(rawValue: "nonMatchingFloatDecodingStrategyKey")!
     }
-    
-    public func showData() -> String? {
-        return rawData
-    }
 }
 
 // MARK: - TopLevelDecoder
@@ -93,7 +85,7 @@ public final class _MessagePackDecoder {
     init(data: Data) {
         self.data = data
     }
-    
+
     public var showData: Data {
         return self.data
     }
