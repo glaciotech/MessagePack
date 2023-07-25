@@ -10,15 +10,18 @@ extension _MessagePackEncoder {
         
         var codingPath: [CodingKey]
         
+        var sortOutput: Bool
+        
         var nestedCodingPath: [CodingKey] {
             return self.codingPath + [AnyCodingKey(intValue: self.count)!]
         }
         
         var userInfo: [CodingUserInfoKey: Any]
         
-        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], sortOutput: Bool) {
             self.codingPath = codingPath
             self.userInfo = userInfo
+            self.sortOutput = sortOutput
         }
     }
 }
@@ -42,14 +45,14 @@ extension _MessagePackEncoder.UnkeyedContainer: UnkeyedEncodingContainer {
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = _MessagePackEncoder.KeyedContainer<NestedKey>(codingPath: self.nestedCodingPath, userInfo: self.userInfo)
+        let container = _MessagePackEncoder.KeyedContainer<NestedKey>(codingPath: self.nestedCodingPath, userInfo: self.userInfo, sortOutput: self.sortOutput)
         self.storage.append(container)
         
         return KeyedEncodingContainer(container)
     }
     
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = _MessagePackEncoder.UnkeyedContainer(codingPath: self.nestedCodingPath, userInfo: self.userInfo)
+        let container = _MessagePackEncoder.UnkeyedContainer(codingPath: self.nestedCodingPath, userInfo: self.userInfo, sortOutput: self.sortOutput)
         self.storage.append(container)
         
         return container

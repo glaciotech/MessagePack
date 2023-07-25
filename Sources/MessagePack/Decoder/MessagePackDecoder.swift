@@ -12,6 +12,8 @@ final public class MessagePackDecoder {
      */
     public var userInfo: [CodingUserInfoKey : Any] = [:]
     
+    var rawData: String?
+    
     /**
      Returns a value of the type you specify,
      decoded from a MessagePack object.
@@ -27,6 +29,8 @@ final public class MessagePackDecoder {
         let decoder = _MessagePackDecoder(data: data)
         decoder.userInfo = self.userInfo
         decoder.userInfo[MessagePackDecoder.nonMatchingFloatDecodingStrategyKey] = nonMatchingFloatDecodingStrategy
+        
+        rawData = String(data: data, encoding: .ascii)
         
         switch type {
         case is Data.Type:
@@ -60,6 +64,10 @@ final public class MessagePackDecoder {
     internal static var nonMatchingFloatDecodingStrategyKey: CodingUserInfoKey {
         return CodingUserInfoKey(rawValue: "nonMatchingFloatDecodingStrategyKey")!
     }
+    
+    public func showData() -> String? {
+        return rawData
+    }
 }
 
 // MARK: - TopLevelDecoder
@@ -74,16 +82,20 @@ extension MessagePackDecoder: TopLevelDecoder {
 
 // MARK: -
 
-final class _MessagePackDecoder {
-    var codingPath: [CodingKey] = []
+public final class _MessagePackDecoder {
+    public var codingPath: [CodingKey] = []
     
-    var userInfo: [CodingUserInfoKey : Any] = [:]
+    public var userInfo: [CodingUserInfoKey : Any] = [:]
     
     var container: MessagePackDecodingContainer?
     fileprivate var data: Data
     
     init(data: Data) {
         self.data = data
+    }
+    
+    public var showData: Data {
+        return self.data
     }
 }
 
@@ -92,7 +104,7 @@ extension _MessagePackDecoder: Decoder {
         precondition(self.container == nil)
     }
         
-    func container<Key>(keyedBy type: Key.Type) -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    public func container<Key>(keyedBy type: Key.Type) -> KeyedDecodingContainer<Key> where Key : CodingKey {
         assertCanCreateContainer()
 
         let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
@@ -101,7 +113,7 @@ extension _MessagePackDecoder: Decoder {
         return KeyedDecodingContainer(container)
     }
 
-    func unkeyedContainer() -> UnkeyedDecodingContainer {
+    public func unkeyedContainer() -> UnkeyedDecodingContainer {
         assertCanCreateContainer()
         
         let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
@@ -110,7 +122,7 @@ extension _MessagePackDecoder: Decoder {
         return container
     }
     
-    func singleValueContainer() -> SingleValueDecodingContainer {
+    public func singleValueContainer() -> SingleValueDecodingContainer {
         assertCanCreateContainer()
         
         let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)

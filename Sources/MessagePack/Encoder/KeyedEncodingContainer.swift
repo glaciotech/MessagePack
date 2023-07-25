@@ -3,7 +3,8 @@ import Foundation
 extension _MessagePackEncoder {
     final class KeyedContainer<Key> where Key: CodingKey {
         private var storage: [AnyCodingKey: _MessagePackEncodingContainer] = [:]
-        
+    
+        var sortOutput: Bool
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
         
@@ -11,9 +12,10 @@ extension _MessagePackEncoder {
             return self.codingPath + [key]
         }
         
-        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], sortOutput: Bool) {
             self.codingPath = codingPath
             self.userInfo = userInfo
+            self.sortOutput = sortOutput
         }
     }
 }
@@ -36,14 +38,14 @@ extension _MessagePackEncoder.KeyedContainer: KeyedEncodingContainerProtocol {
     }
     
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        let container = _MessagePackEncoder.UnkeyedContainer(codingPath: self.nestedCodingPath(forKey: key), userInfo: self.userInfo)
+        let container = _MessagePackEncoder.UnkeyedContainer(codingPath: self.nestedCodingPath(forKey: key), userInfo: self.userInfo, sortOutput: self.sortOutput)
         self.storage[AnyCodingKey(key)] = container
 
         return container
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = _MessagePackEncoder.KeyedContainer<NestedKey>(codingPath: self.nestedCodingPath(forKey: key), userInfo: self.userInfo)
+        let container = _MessagePackEncoder.KeyedContainer<NestedKey>(codingPath: self.nestedCodingPath(forKey: key), userInfo: self.userInfo, sortOutput: self.sortOutput)
         self.storage[AnyCodingKey(key)] = container
 
         return KeyedEncodingContainer(container)
@@ -77,7 +79,8 @@ extension _MessagePackEncoder.KeyedContainer: _MessagePackEncodingContainer {
             fatalError()
         }
         
-        for (key, container) in self.storage {
+        let outputableStorage: [(AnyCodingKey, _MessagePackEncodingContainer)] = sortOutput ? Array(self.storage.sorted(by: { $0.key.stringValue < $1.key.stringValue })) : Array(self.storage.map({ ($0, $1) }))
+        for (key, container) in outputableStorage {
             let keyContainer = _MessagePackEncoder.SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo)
             try! keyContainer.encode(key.stringValue)
             data.append(keyContainer.data)

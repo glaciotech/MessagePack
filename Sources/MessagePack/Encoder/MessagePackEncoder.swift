@@ -4,7 +4,12 @@ import Foundation
  An object that encodes instances of a data type as MessagePack objects.
  */
 final public class MessagePackEncoder {
-    public init() {}
+    
+    private var sortOutput: Bool
+    
+    public init(sortOutput: Bool = false) {
+        self.sortOutput = sortOutput
+    }
     
     /**
      A dictionary you use to customize the encoding process
@@ -23,6 +28,7 @@ final public class MessagePackEncoder {
     public func encode<T>(_ value: T) throws -> Data where T : Encodable {
         let encoder = _MessagePackEncoder()
         encoder.userInfo = self.userInfo
+        encoder.sortOutput = self.sortOutput
         
         switch value {
         case let data as Data:
@@ -58,6 +64,8 @@ class _MessagePackEncoder {
     
     var userInfo: [CodingUserInfoKey : Any] = [:]
     
+    var sortOutput: Bool = false
+    
     fileprivate var container: _MessagePackEncodingContainer?
     
     var data: Data {
@@ -73,7 +81,7 @@ extension _MessagePackEncoder: Encoder {
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
         assertCanCreateContainer()
         
-        let container = KeyedContainer<Key>(codingPath: self.codingPath, userInfo: self.userInfo)
+        let container = KeyedContainer<Key>(codingPath: self.codingPath, userInfo: self.userInfo, sortOutput: self.sortOutput)
         self.container = container
         
         return KeyedEncodingContainer(container)
@@ -82,7 +90,7 @@ extension _MessagePackEncoder: Encoder {
     func unkeyedContainer() -> UnkeyedEncodingContainer {
         assertCanCreateContainer()
         
-        let container = UnkeyedContainer(codingPath: self.codingPath, userInfo: self.userInfo)
+        let container = UnkeyedContainer(codingPath: self.codingPath, userInfo: self.userInfo, sortOutput: self.sortOutput)
         self.container = container
         
         return container

@@ -126,11 +126,14 @@ extension _MessagePackDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
         try checkCanDecodeValue(forKey: key)
         
-        guard let keyedContainer = self.nestedContainers[key.stringValue] as? _MessagePackDecoder.KeyedContainer<NestedKey> else {
+        guard let keyedContainer = self.nestedContainers[key.stringValue] else {// _MessagePackDecoder.KeyedContainer<NestedKey> else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
         
-        return KeyedDecodingContainer(keyedContainer)
+        
+        let keyedContainer2 = _MessagePackDecoder.KeyedContainer<NestedKey>(data: keyedContainer.data, codingPath: keyedContainer.codingPath, userInfo: keyedContainer.userInfo)
+        //        return keyedContainer2 //KeyedDecodingContainer(keyedContainer)
+        return KeyedDecodingContainer(keyedContainer2)
     }
     
     func superDecoder() throws -> Decoder {
